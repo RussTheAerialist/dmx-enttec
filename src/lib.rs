@@ -1,12 +1,9 @@
+mod ftdi2xx;
 mod native;
 
-pub struct EntecTransmitter {
+pub struct EntecTransmitter {}
 
-}
-
-impl EntecTransmitter {
-
-}
+impl EntecTransmitter {}
 
 #[cfg(test)]
 mod tests {
