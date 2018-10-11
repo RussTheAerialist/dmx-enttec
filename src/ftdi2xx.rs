@@ -11,12 +11,10 @@ impl Ftdi2xx {
         let alloc_size = struct_size * num_devices;
         let layout = Layout::from_size_align(alloc_size, 8).expect("Unable to allocate");
         let data : Vec<_ft_device_list_info_node> = unsafe {
-            let raw_data = alloc(layout);
-            Vec::from_raw_parts(
-                transmute::<[u8], [_ft_device_list_info_node]>(raw_data),
-                alloc_size, alloc_size)
+            let raw_data = transmute::<*mut u8, *mut _ft_device_list_info_node>(alloc(layout));
+            Vec::<_ft_device_list_info_node>::from_raw_parts(raw_data, num_devices, num_devices)
         };
-        // println!("Allocated {:?}\n{:?}", alloc_size, data);
+        println!("Allocated {:?}\n{:?}", alloc_size, data);
     }
 
     fn get_device_list() {
