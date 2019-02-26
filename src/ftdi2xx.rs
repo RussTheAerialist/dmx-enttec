@@ -37,12 +37,17 @@ struct Ftdi2xx {}
 impl Ftdi2xx {
 
     fn allocate_list_info_node(num_devices : usize) {
-        let struct_size = size_of::<_ft_device_list_info_node>();
+        type Node = _ft_device_list_info_node;
+
+        let struct_size = size_of::<Node>();
         let alloc_size = struct_size * num_devices;
         let layout = Layout::from_size_align(alloc_size, 8).expect("Unable to allocate");
-        let data : Vec<_ft_device_list_info_node> = unsafe {
-            let raw_data = transmute::<*mut u8, *mut _ft_device_list_info_node>(alloc(layout));
-            Vec::<_ft_device_list_info_node>::from_raw_parts(raw_data, num_devices, num_devices)
+
+        #[allow(clippy::cast_ptr_alignment)]
+        let data : Vec<Node> = unsafe {
+            // let raw_data = transmute::<*mut u8, *mut Node>(alloc(layout) as *mut u8);
+            let raw_data = (alloc(layout) as *mut u8) as *mut Node;
+            Vec::<Node>::from_raw_parts(raw_data, num_devices, num_devices)
         };
         println!("Allocated {:?}\n{:?}", alloc_size, data);
     }
@@ -50,7 +55,7 @@ impl Ftdi2xx {
     fn get_device_list() -> Result<Vec<_ft_device_list_info_node>> {
         unsafe {
             let mut num_devs: u32 = 0;
-            let mut status: FT_STATUS = FT_CreateDeviceInfoList(&mut num_devs);
+            let status: FT_STATUS = FT_CreateDeviceInfoList(&mut num_devs);
             println!("Found {:?} device(s)", num_devs);
             if num_devs == 0 {
                 return Err(FtdiError::NoDevicesFound)
