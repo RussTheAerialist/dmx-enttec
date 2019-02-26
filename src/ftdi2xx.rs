@@ -2,11 +2,11 @@ use std::result;
 use std::fmt;
 use std::error::Error;
 use std::alloc::{alloc, Layout};
-use std::mem::{size_of, transmute};
+use std::mem::{size_of};
 use super::native::*;
 
 #[derive(Debug)]
-enum FtdiError {
+pub enum FtdiError {
     Generic,
     UnableToAllocate,
     NoDevicesFound,
@@ -32,11 +32,11 @@ impl fmt::Display for FtdiError {
 
 type Result<T> = result::Result<T, FtdiError>;
 
-struct Ftdi2xx {}
+pub struct Ftdi2xx {}
 
 impl Ftdi2xx {
 
-    fn allocate_list_info_node(num_devices : usize) {
+    pub fn allocate_list_info_node(num_devices : usize) {
         type Node = _ft_device_list_info_node;
 
         let struct_size = size_of::<Node>();
@@ -45,17 +45,18 @@ impl Ftdi2xx {
 
         #[allow(clippy::cast_ptr_alignment)]
         let data : Vec<Node> = unsafe {
-            // let raw_data = transmute::<*mut u8, *mut Node>(alloc(layout) as *mut u8);
             let raw_data = (alloc(layout) as *mut u8) as *mut Node;
             Vec::<Node>::from_raw_parts(raw_data, num_devices, num_devices)
         };
         println!("Allocated {:?}\n{:?}", alloc_size, data);
     }
 
-    fn get_device_list() -> Result<Vec<_ft_device_list_info_node>> {
+    pub fn get_device_list() -> Result<Vec<_ft_device_list_info_node>> {
+        // TODO: Reduce the footprint of this unsafe block
         unsafe {
             let mut num_devs: u32 = 0;
-            let status: FT_STATUS = FT_CreateDeviceInfoList(&mut num_devs);
+            let _status: FT_STATUS = FT_CreateDeviceInfoList(&mut num_devs);
+            // TODO: Use log::debug instead
             println!("Found {:?} device(s)", num_devs);
             if num_devs == 0 {
                 return Err(FtdiError::NoDevicesFound)

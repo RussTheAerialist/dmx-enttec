@@ -1,4 +1,4 @@
-mod ftdi2xx;
+pub mod ftdi2xx;
 mod native;
 
 pub struct EntecTransmitter {}
